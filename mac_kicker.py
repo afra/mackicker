@@ -25,6 +25,7 @@ def mac_tester():
 					if mac_address in macs.keys():
 						current_users.append(macs[mac_address])
 
+		current_users = list(set(current_users)) # Dont duplicate users
 		time.sleep(60)
 
 
