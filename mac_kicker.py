@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #
 # MIT
+# ciko@afra-berlin.de
 import pydle, threading, subprocess, time, asyncio
 
 def mac_tester():
