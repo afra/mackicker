@@ -40,7 +40,7 @@ class MyOwnBot(pydle.Client):
 		# don't respond to our own messages, as this leads to a positive feedback loop
 		if source != self.nickname and (".presence" in message or ".present" in message):
 			if len(current_users) == 0:
-				m = "Nobody wants to be surveiled."
+				m = "Nobody wants to be surveilled."
 			else:
 				m = "Now at AfRA: " + ", ".join(current_users)
 			yield from self.message(target, m)
