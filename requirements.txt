@@ -1,1 +1,3 @@
 pydle
+requests
+evdev
