@@ -2,7 +2,14 @@
 #
 # MIT
 # ciko@afra-berlin.de
-import pydle, threading, subprocess, time, asyncio, hashlib, requests, evdev
+import asyncio
+import subprocess
+import time
+import threading
+
+import evdev
+import hashlib
+import requests
 
 def mac_tester():
 	global current_mac_users, current_rfid_users
@@ -38,11 +45,12 @@ def mac_tester():
 
 
 def find_rfid_user(authcode):
+	enc_authcode = hashlib.sha224(authcode.encode()).hexdigest().upper():
 	with open("registered_rfid", "r") as f:
 		tokenlines = f.readlines()
 
 	for line in tokenlines:
-		if line.split()[0].upper() == hashlib.sha224(authcode.encode()).hexdigest().upper():
+		if line.split()[0].upper() == enc_authcode:
 			return line.split()[1]
 
 	return None
@@ -55,8 +63,9 @@ def rfid_watcher():
 	current_code = ""
 	keys = "XX1234567890XXXXqwertzuiopXXXXasdfghjklXXXXXyxcvbnmXXXXXXXXXXXXXXXXXXXXXXX"
 
+	# Read the keys
 	for event in rfid_reader.read_loop():
-		if event.type == 1 and event.value == 1:
+		if event.type == 1 and event.value == 1:  # Keyboard events
 			if event.code > len(keys):
 				continue
 
@@ -64,12 +73,14 @@ def rfid_watcher():
 				current_code += keys[event.code]
 			else:
 				rfid_user = find_rfid_user(current_code)
-				if rfid_user:
-					if rfid_user in current_rfid_users:
-						current_rfid_users.remove(rfid_user)
-					else:
-						current_rfid_users.append(rfid_user)
+				if not rfid_user: 
+					continue
 				
+				if rfid_user in current_rfid_users:
+					current_rfid_users.remove(rfid_user)
+				else:
+					current_rfid_users.append(rfid_user)
+			
 				current_code = ""
 
 
@@ -85,7 +96,7 @@ class MyOwnBot(pydle.Client):
 		current_users = list(set(current_mac_users + current_rfid_users))
 		# don't respond to our own messages, as this leads to a positive feedback loop
 		if source != self.nickname:
-			if(".presence" in message or ".present" in message):
+			if (".presence" in message or ".present" in message):
 				if len(current_users) == 0:
 					m = "Nobody wants to be surveilled."
 				else:
@@ -103,4 +114,3 @@ threading.Thread(target=rfid_watcher).start()
 
 client = MyOwnBot("pr3s3nce", realname="AfRA attendance bot")
 client.run('chat.freenode.net', tls=True, tls_verify=False)
-
