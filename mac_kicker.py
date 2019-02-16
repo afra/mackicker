@@ -51,8 +51,10 @@ def find_rfid_user(authcode):
 		tokenlines = f.readlines()
 
 	for line in tokenlines:
-		if line.split()[0].upper() == enc_authcode:
-			return line.split()[1]
+		words = line.split()
+		if len(words) >= 2:
+			if words[0].upper() == enc_authcode:
+				return words[1]
 
 	return None
 
