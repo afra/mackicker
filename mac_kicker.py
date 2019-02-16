@@ -45,7 +45,7 @@ def mac_tester():
 
 
 def find_rfid_user(authcode):
-	enc_authcode = hashlib.sha224(authcode.encode()).hexdigest().upper():
+	enc_authcode = hashlib.sha224(authcode.encode()).hexdigest().upper()
 	with open("registered_rfid", "r") as f:
 		tokenlines = f.readlines()
 
