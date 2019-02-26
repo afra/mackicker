@@ -38,10 +38,11 @@ def mac_tester():
 
 		current_mac_users = list(set(current_mac_users)) # Dont duplicate users
 
-		# If the door is closed, kill all RFID users
+		# If the door is closed, kill all RFID and IRC users
 		try:
 			if "LOCKED" in requests.get("http://door:8080/").text:
 				current_rfid_users = []
+				current_irc_users = []
 		except Exception:
 			pass # Ignore if the door is dead
 
@@ -93,6 +94,19 @@ def rfid_watcher():
 
 				current_code = ""
 
+        
+def register_here(nick):
+	global current_irc_users
+	if nick not in current_irc_users:
+		current_irc_users.append(nick)
+
+
+def register_gone(nick):
+	global current_irc_users
+	if nick in current_irc_users:
+		current_irc_users.remove(nick)
+
+    
 def speak(text):
 	threading.Thread(target=t_speak, args=(text,)).start()
 
@@ -179,8 +193,14 @@ class MyOwnBot(pydle.Client):
 					m += "\nSoon to arrive: " + ", ".join(formatted_eta_users)
 
 				yield from self.message(target, m)
+
 			elif ".eta" in message:
 				register_eta(source, message)
+
+			elif ".here" in message:
+				register_here(source)
+			elif ".gone" in message:
+				register_gone(source)
 
 			elif ".clear" in message:
 				current_mac_users = []
@@ -192,11 +212,16 @@ class MyOwnBot(pydle.Client):
 	def on_private_message(self, source, message):
 		if ".eta" in message:
 			register_eta(source, message)
+		elif ".here" in message:
+			register_here(source)
+		elif ".gone" in message:
+			register_gone(source)
 
 
 current_mac_users = []
 current_rfid_users = []
 current_eta_users = []
+current_irc_users = []
 threading.Thread(target=mac_tester).start()
 threading.Thread(target=rfid_watcher).start()
 
