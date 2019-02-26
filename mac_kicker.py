@@ -20,7 +20,7 @@ def mac_tester():
 		macs = {}
 		with open("registered_macs", "r") as f:
 			for line in f.readlines():
-				if len(line.strip()) > 0:
+				if len(line.strip()) >= 2:
 					macs[line.split()[0].upper()] = line.split()[1]
 
 		# Scan for all macs in the current network
@@ -90,6 +90,7 @@ def rfid_watcher():
 
 				current_code = ""
 
+
 def register_here(nick):
 	global current_irc_users
 	if nick not in current_irc_users:
@@ -113,19 +114,20 @@ def register_eta(user, message):
 	global current_eta_users
 
 	message_parts = message.split()
-	if len(message_parts) != 2: return # Skip invalid messages
-	if message_parts[0] != ".eta" or "min" not in message_parts[1]: return # Skip non ETA messages
+	if len(message_parts) != 2: return False  # Skip invalid messages
+	if "min" not in message_parts[1]: return False  # Skip non ETA messages
 
 	try:
 		until_arrival = datetime.timedelta(minutes=int(message_parts[1].replace("min", "")))
 	except TypeError:
-		return
+		return False
 	except ValueError:
-		return
+		return False
 
 	arrival_time = datetime.datetime.now() + until_arrival
 	current_eta_users.append([user, arrival_time])
-	speak("{} will arrive at {}".format(user), arrival_time.strftime("%H %M"))
+	speak("{} will arrive at {}".format(user, arrival_time.strftime("%H %M")))
+	return True
 
 
 def get_formatted_eta_users():
@@ -143,6 +145,35 @@ def get_formatted_eta_users():
 	return formatted_eta_users
 
 
+def self_register_mac(nick, message):
+	message_parts = message.split()
+	if len(message_parts) != 3: return False# Skip invalid messages
+	mac = message_parts[2]
+	if len(mac.split(":")) != 6 or len(mac) != 17: return False # Skip non-Macs
+
+	with open("registered_macs", "a") as f:
+		f.write("\n" + mac + " " + nick)
+
+	return True
+
+
+def self_remove_mac(nick, message):
+	message_parts = message.split()
+	if len(message_parts) != 3: return False  # Skip invalid messages
+	mac = message_parts[2]
+	if len(mac.split(":")) != 6 or len(mac) != 17: return False # Skip non-Macs
+
+	with open("registered_macs", "r") as f:
+		mac_lines = f.readlines()
+
+	with open("registered_macs", "w") as f:
+		for mac_line in mac_lines:
+			if mac.upper() not in mac_line.upper():
+				f.write(mac_line)
+
+	return True
+
+
 class MyOwnBot(pydle.Client):
 	@asyncio.coroutine
 	def on_connect(self):
@@ -151,12 +182,12 @@ class MyOwnBot(pydle.Client):
 
 	@asyncio.coroutine
 	def on_message(self, target, source, message):
-		global current_mac_users, current_rfid_users
+		global current_mac_users, current_rfid_users, current_eta_users, current_irc_users
 
-		current_users = list(set(current_mac_users + current_rfid_users))
+		current_users = list(set(current_mac_users + current_rfid_users + current_irc_users))
 		# don't respond to our own messages, as this leads to a positive feedback loop
 		if source != self.nickname:
-			if (".presence" in message or ".present" in message):
+			if message.startswith(".presence") or message.startswith(".present"):
 				formatted_eta_users = get_formatted_eta_users()
 				m = ""
 				if len(current_users) == 0 and len(formatted_eta_users) == 0:
@@ -168,28 +199,43 @@ class MyOwnBot(pydle.Client):
 
 				yield from self.message(target, m)
 
-			elif ".eta" in message:
+			elif message.startswith(".eta"):
 				register_eta(source, message)
 
-			elif ".here" in message:
+			elif message.startswith(".here"):
 				register_here(source)
-			elif ".gone" in message:
+			elif message.startswith(".gone"):
 				register_gone(source)
 
-			elif ".clear" in message:
+			elif message.startswith(".clear"):
 				current_mac_users = []
 				current_rfid_users = []
 				current_eta_users = []
 
 
 	@asyncio.coroutine
-	def on_private_message(self, source, message):
-		if ".eta" in message:
-			register_eta(source, message)
-		elif ".here" in message:
+	def on_private_message(self, target, source, message):
+		if message.startswith(".eta"):
+			if register_eta(source, message):
+				yield from self.message(source, "Got it, see you")
+			else:
+				yield from self.message(source, "Sorry, I did not understand this. Please use: .eta XXmin")
+		elif message.startswith(".here"):
 			register_here(source)
-		elif ".gone" in message:
+			yield from self.message(source, "Welcome, you can log out via .gone")
+		elif message.startswith(".gone"):
 			register_gone(source)
+			yield from self.message(source, "Goodbye")
+		elif message.startswith(".register mac"):
+			if self_register_mac(source, message):
+				yield from self.message(source, "MAC registered, the update can take up to 1 minute")
+			else:
+				yield from self.message(source, "Sorry, I did not understand this. Please use: .register mac MAC_ADDRESS")
+		elif message.startswith(".remove mac"):
+			if self_remove_mac(source, message):
+				yield from self.message(source, "MAC removed, the update can take up to 1 minute")
+			else:
+				yield from self.message(source, "Sorry, I did not understand this. Please use: .remove mac MAC_ADDRESS")
 
 
 current_mac_users = []
