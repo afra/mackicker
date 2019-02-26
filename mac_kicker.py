@@ -12,6 +12,8 @@ import evdev
 import hashlib
 import pydle
 import requests
+from rpi_ws281x import *
+
 
 def mac_tester():
 	global current_mac_users, current_rfid_users
@@ -131,6 +133,23 @@ def get_formatted_eta_users():
 	return formatted_eta_users
 
 
+def color_rotate(colors, rotations=1):
+	threading.Thread(target=t_color_rotate, args=(colors, rotations,)).start()
+
+
+def t_color_rotate(colors, rotations):
+    for i in range(0, strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.setPixelColor((i+1)%LED_COUNT, Color(0,0,0))
+        strip.show()
+        time.sleep(0.1)
+
+    for i in range(1, strip.numPixels()):
+        strip.setPixelColor(i, Color(0,0,0))
+        strip.show()
+        time.sleep(0.1)
+
+
 class MyOwnBot(pydle.Client):
 	@asyncio.coroutine
 	def on_connect(self):
@@ -175,6 +194,18 @@ current_rfid_users = []
 current_eta_users = []
 threading.Thread(target=mac_tester).start()
 threading.Thread(target=rfid_watcher).start()
+
+# LED strip configuration:
+LED_COUNT      = 16      # Number of LED pixels.
+LED_PIN        = 10      # GPIO pin connected to the pixels (must support PWM!).
+LED_CHANNEL    = 1       # PWM Channel must correspond to chosen LED_PIN PWM!
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
+LED_BRIGHTNESS = 100      # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+
+strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+strip.begin()
 
 client = MyOwnBot("pr3s3nce", realname="AfRA attendance bot")
 client.run('chat.freenode.net', tls=True, tls_verify=False)
