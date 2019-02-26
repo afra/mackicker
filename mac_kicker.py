@@ -11,6 +11,7 @@ import evdev
 import hashlib
 import pydle
 import requests
+import pydle
 
 def mac_tester():
 	global current_mac_users, current_rfid_users
