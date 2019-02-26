@@ -10,8 +10,8 @@ import threading
 
 import evdev
 import hashlib
-import requests
 import pydle
+import requests
 
 def mac_tester():
 	global current_mac_users, current_rfid_users
@@ -52,8 +52,10 @@ def find_rfid_user(authcode):
 		tokenlines = f.readlines()
 
 	for line in tokenlines:
-		if line.split()[0].upper() == enc_authcode:
-			return line.split()[1]
+		words = line.split()
+		if len(words) >= 2:
+			if words[0].upper() == enc_authcode:
+				return words[1]
 
 	return None
 
@@ -75,7 +77,8 @@ def rfid_watcher():
 				current_code += keys[event.code]
 			else:
 				rfid_user = find_rfid_user(current_code)
-				if not rfid_user: 
+
+        if not rfid_user: 
 					continue
 				
 				if rfid_user in current_rfid_users:
@@ -171,6 +174,7 @@ class MyOwnBot(pydle.Client):
 current_mac_users = []
 current_rfid_users = []
 current_eta_users = []
+
 threading.Thread(target=mac_tester).start()
 threading.Thread(target=rfid_watcher).start()
 

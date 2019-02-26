@@ -1,0 +1,15 @@
+[Unit]
+Description=MAC Kicker
+After=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/mac_kicker/mac_kicker.py
+WorkingDirectory=/home/pi/mac_kicker/
+
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
