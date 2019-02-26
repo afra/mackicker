@@ -84,15 +84,20 @@ def rfid_watcher():
 
 				if rfid_user in current_rfid_users:
 					current_rfid_users.remove(rfid_user)
+					color_rotate(Color(255, 0, 0))
 					speak("Goodbye {}".format(rfid_user))
 				else:
 					current_rfid_users.append(rfid_user)
+					color_rotate(Color(0, 255, 0))
 					speak("Welcome {}".format(rfid_user))
 
 				current_code = ""
 
-
 def speak(text):
+	threading.Thread(target=t_speak, args=(text,)).start()
+
+
+def t_speak(text):
 	subprocess.run(["pico2wave" ,"--lang", "en-US", "--wave", "/tmp/tts.wav", "\"{}\"".format(text)])
 	subprocess.run(["aplay", "-D", "plughw:CARD=Device,DEV=0", "/tmp/tts.wav"])
 	subprocess.run(["rm", "/tmp/tts.wav"])
