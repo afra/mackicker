@@ -3,6 +3,7 @@
 # MIT
 # ciko@afra-berlin.de
 import asyncio
+import datetime
 import subprocess
 import time
 import threading
@@ -79,16 +80,60 @@ def rfid_watcher():
 				
 				if rfid_user in current_rfid_users:
 					current_rfid_users.remove(rfid_user)
+					speak("Goodbye {}".format(rfid_user))
 				else:
 					current_rfid_users.append(rfid_user)
+					speak("Welcome {}".format(rfid_user))
 			
 				current_code = ""
+
+
+def speak(text):
+	subprocess.run(["pico2wave" ,"--lang", "en-US", "--wave", "/tmp/tts.wav", "\"{}\"".format(text)])
+	subprocess.run(["aplay", "-D", "plughw:CARD=Device,DEV=0", "/tmp/tts.wav"])
+	subprocess.run(["rm", "/tmp/tts.wav"])
+
+
+def register_eta(user, message):
+	# .eta 10min (arrives in 10 minutes)
+	global current_eta_users
+
+	message_parts = message.split()
+	if len(message_parts) != 2: return # Skip invalid messages
+	if message_parts[0] != ".eta" or "min" not in message_parts[1]: return # Skip non ETA messages
+
+	try:
+		until_arrival = datetime.timedelta(minutes=int(message_parts[1].replace("min", "")))
+	except TypeError:
+		return
+	except ValueError:
+		pass
+
+	arrival_time = datetime.datetime.now() + until_arrival
+	current_eta_users.append([user, arrival_time])
+	speak("{} will arrive at {}".format(user), arrival_time.strftime("%H %M"))
+
+
+def get_formatted_eta_users():
+	global current_eta_users
+	formatted_eta_users = []
+
+	now = datetime.datetime.now()
+
+	for eta_user in current_eta_users:
+		if eta_user[1] < now:
+			current_eta_users.remove(eta_user)
+		else:
+			formatted_eta_users.append("{} ({})".format(eta_user[0], eta_user[1].strftime("%H:%M")))
+
+	return formatted_eta_users
 
 
 class MyOwnBot(pydle.Client):
 	@asyncio.coroutine
 	def on_connect(self):
 		 yield from self.join('#afra')
+
 
 	@asyncio.coroutine
 	def on_message(self, target, source, message):
@@ -98,18 +143,34 @@ class MyOwnBot(pydle.Client):
 		# don't respond to our own messages, as this leads to a positive feedback loop
 		if source != self.nickname:
 			if (".presence" in message or ".present" in message):
-				if len(current_users) == 0:
-					m = "Nobody wants to be surveilled."
-				else:
-					m = "Now at AfRA: " + ", ".join(current_users)
+				formatted_eta_users = get_formatted_eta_users()
+				m = ""
+				if len(current_users) == 0 and len(formatted_eta_users) == 0:
+					m += "Nobody wants to be surveilled."
+				if len(current_users) > 0:
+					m += "Now at AfRA: " + ", ".join(current_users)
+				if len(formatted_eta_users) > 0:
+					m += "\nSoon to arrive: " + ", ".join(formatted_eta_users)
+
 				yield from self.message(target, m)
-			elif (".clear" in message):
+			elif ".eta" in message:
+				register_eta(source, message)
+
+			elif ".clear" in message:
 				current_mac_users = []
 				current_rfid_users = []
+				current_eta_users = []
+
+
+	@asyncio.coroutine
+	def on_private_message(self, source, message):
+		if ".eta" in message:
+			register_eta(source, message)
 
 
 current_mac_users = []
 current_rfid_users = []
+current_eta_users = []
 threading.Thread(target=mac_tester).start()
 threading.Thread(target=rfid_watcher).start()
 
