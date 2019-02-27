@@ -99,12 +99,16 @@ def register_here(nick):
 	global current_irc_users
 	if nick not in current_irc_users:
 		current_irc_users.append(nick)
+		color_rotate(Color(0, 255, 0))
+		speak("Welcome {}".format(nick))
 
 
 def register_gone(nick):
 	global current_irc_users
 	if nick in current_irc_users:
 		current_irc_users.remove(nick)
+		color_rotate(Color(255, 0, 0))
+		speak("Goodbye {}".format(nick))
 
     
 def speak(text):
