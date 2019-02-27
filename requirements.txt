@@ -1,3 +1,4 @@
 pydle
 requests
 evdev
+rpi_ws281x
