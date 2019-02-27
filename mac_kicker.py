@@ -214,15 +214,13 @@ class MyOwnBot(pydle.Client):
 		if source != self.nickname:
 			if message.startswith(".presence") or message.startswith(".present"):
 				formatted_eta_users = get_formatted_eta_users()
-				m = ""
 				if len(current_users) == 0 and len(formatted_eta_users) == 0:
-					m += "Nobody wants to be surveilled."
-				if len(current_users) > 0:
-					m += "Now at AfRA: " + ", ".join(current_users)
-				if len(formatted_eta_users) > 0:
-					m += "\nSoon to arrive: " + ", ".join(formatted_eta_users)
+					yield from self.message(target, "Nobody wants to be surveilled.")
+				elif len(current_users) > 0:
+					yield from self.message(target, "Now at AfRA: " + ", ".join(current_users))
 
-				yield from self.message(target, m)
+				if len(formatted_eta_users) > 0:
+					yield from self.message(target, "Soon to arrive: " + ", ".join(formatted_eta_users))
 
 			elif message.startswith(".eta"):
 				register_eta(source, message)
