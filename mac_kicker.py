@@ -188,7 +188,7 @@ def color_rotate(colors, rotations=1):
 
 def t_color_rotate(colors, rotations):
     for i in range(0, strip.numPixels()):
-        strip.setPixelColor(i, color)
+        strip.setPixelColor(i, colors)
         strip.setPixelColor((i+1)%LED_COUNT, Color(0,0,0))
         strip.show()
         time.sleep(0.1)
