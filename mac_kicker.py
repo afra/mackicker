@@ -261,6 +261,8 @@ class MyOwnBot(pydle.Client):
 				yield from self.message(source, "MAC removed, the update can take up to 1 minute")
 			else:
 				yield from self.message(source, "Sorry, I did not understand this. Please use: .remove mac MAC_ADDRESS")
+		else:
+			yield from self.message(source, "Sorry, I did not understand. Reference: https://www.afra-berlin.de/dokuwiki/doku.php")
 
 
 current_mac_users = []
