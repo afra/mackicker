@@ -264,7 +264,7 @@ class MyOwnBot(pydle.Client):
 			else:
 				yield from self.message(source, "Sorry, I did not understand this. Please use: .remove mac MAC_ADDRESS")
 		else:
-			yield from self.message(source, "Sorry, I did not understand. Reference: https://www.afra-berlin.de/dokuwiki/doku.php")
+			yield from self.message(source, "Sorry, I did not understand. Reference: https://www.afra-berlin.de/dokuwiki/doku.php?id=projekte:pr3s3nce")
 
 
 current_mac_users = []
