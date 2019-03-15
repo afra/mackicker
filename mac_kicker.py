@@ -5,6 +5,7 @@
 import asyncio
 import datetime
 import subprocess
+import sys
 import time
 import threading
 
@@ -286,5 +287,8 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 strip.begin()
 
-client = MyOwnBot("pr3s3nce", realname="AfRA attendance bot")
-client.run('chat.freenode.net', tls=True, tls_verify=False)
+try:
+    client = MyOwnBot("pr3s3nce", realname="AfRA attendance bot")
+    client.run('chat.freenode.net', tls=True, tls_verify=False)
+finally:
+    sys.exit(1)
