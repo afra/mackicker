@@ -230,9 +230,9 @@ class MyOwnBot(pydle.Client):
             elif message.startswith(".eta"):
                 register_eta(source, message)
 
-            elif message.startswith(".here"):
+            elif message.startswith(".here") or message.startswith(".da"):
                 register_here(source)
-            elif message.startswith(".gone"):
+            elif message.startswith(".gone") or message.startswith(".weg"):
                 register_gone(source)
 
             elif message.startswith(".clear"):
