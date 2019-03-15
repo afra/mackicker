@@ -247,10 +247,10 @@ class MyOwnBot(pydle.Client):
                 yield from self.message(source, "Got it, see you")
             else:
                 yield from self.message(source, "Sorry, I did not understand this. Please use: .eta XXmin")
-        elif message.startswith(".here"):
+        elif message.startswith(".here") or message.startswith(".da"):
             register_here(source)
             yield from self.message(source, "Welcome, you can log out via .gone")
-        elif message.startswith(".gone"):
+        elif message.startswith(".gone") or message.startswith(".weg"):
             register_gone(source)
             yield from self.message(source, "Goodbye")
         elif message.startswith(".register mac"):
