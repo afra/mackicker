@@ -239,6 +239,12 @@ class MyOwnBot(pydle.Client):
                 current_mac_users = []
                 current_rfid_users = []
                 current_eta_users = []
+                
+            elif message.startswith(".purge"):
+                current_irc_users = []
+                current_mac_users = []
+                current_rfid_users = []
+                current_eta_users = []
 
 
     @asyncio.coroutine
