@@ -2,6 +2,8 @@
 #
 # MIT
 # ciko@afra-berlin.de
+# kookie@spacekookie.de
+
 import asyncio
 import datetime
 import subprocess
@@ -128,16 +130,22 @@ def register_eta(user, message):
 
     message_parts = message.split()
     if len(message_parts) != 2: return False  # Skip invalid messages
-    if "min" not in message_parts[1]: return False  # Skip non ETA messages
 
-    try:
-        until_arrival = datetime.timedelta(minutes=int(message_parts[1].replace("min", "")))
-    except TypeError:
-        return False
-    except ValueError:
-        return False
+    if "min" in message_parts[1]:
+      try:
+          until_arrival = datetime.timedelta(minutes=int(message_parts[1].replace("min", "")))
+          arrival_time = datetime.datetime.now() + until_arrival
+      except TypeError:
+          return False
+      except ValueError:
+          return False
+    elif ":" in message_parts[1]:
+      time = datetime.datetime.strptime(message_parts[1], '%H:%M')
+      arrival_time = datetime.datetime.now().replace(hour = time.hour, minute = time.minute)
+    else:
+      time = datetime.datetime.strptime(message_parts[1], '%H%M')
+      arrival_time = datetime.datetime.now().replace(hour = time.hour, minute = time.minute)
 
-    arrival_time = datetime.datetime.now() + until_arrival
     current_eta_users.append([user, arrival_time])
     speak("{} will arrive at {}".format(user, arrival_time.strftime("%H %M")))
     return True
