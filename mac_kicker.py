@@ -138,7 +138,7 @@ def register_eta(user, message):
         return False
 
     arrival_time = datetime.datetime.now() + until_arrival
-    current_eta_users.append([user, arrival_time])
+    current_eta_users[user] = arrival_time
     speak("{} will arrive at {}".format(user, arrival_time.strftime("%H %M")))
     return True
 
@@ -149,11 +149,11 @@ def get_formatted_eta_users():
 
     now = datetime.datetime.now()
 
-    for eta_user in current_eta_users:
-        if eta_user[1] < now:
-            current_eta_users.remove(eta_user)
+    for user, time in current_eta_users.items():
+        if time < now:
+            current_eta_users.remove(user)
         else:
-            formatted_eta_users.append("{} ({})".format(eta_user[0], eta_user[1].strftime("%H:%M")))
+            formatted_eta_users.append("{} ({})".format(user, time.strftime("%H:%M")))
 
     return formatted_eta_users
 
@@ -238,13 +238,13 @@ class MyOwnBot(pydle.Client):
             elif message.startswith(".clear"):
                 current_mac_users = []
                 current_rfid_users = []
-                current_eta_users = []
+                current_eta_users = {}
                 
             elif message.startswith(".purge"):
                 current_irc_users = []
                 current_mac_users = []
                 current_rfid_users = []
-                current_eta_users = []
+                current_eta_users = {}
 
 
     @asyncio.coroutine
@@ -276,7 +276,7 @@ class MyOwnBot(pydle.Client):
 
 current_mac_users = []
 current_rfid_users = []
-current_eta_users = []
+current_eta_users = {}
 current_irc_users = []
 threading.Thread(target=mac_tester).start()
 threading.Thread(target=rfid_watcher).start()
