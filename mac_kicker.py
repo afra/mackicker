@@ -152,6 +152,14 @@ def register_eta(user, message):
     return True
 
 
+def get_version():
+  try:
+    version = subprocess.check_output(["git", "rev-parse", "HEAD"])
+    return version.decode('ascii').strip()
+  except CalledProcessError:
+    return "<unknown>"
+
+
 def get_formatted_eta_users():
     global current_eta_users
     formatted_eta_users = []
@@ -254,6 +262,9 @@ class MyOwnBot(pydle.Client):
                 current_mac_users = []
                 current_rfid_users = []
                 current_eta_users = {}
+
+            elif message.startswith(".version"):
+              yield from self.message(target, get_version())
 
 
     @asyncio.coroutine
