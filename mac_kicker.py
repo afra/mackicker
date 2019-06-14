@@ -269,6 +269,9 @@ class MyOwnBot(pydle.Client):
 
     @asyncio.coroutine
     def on_private_message(self, target, source, message):
+        if source in self._nicknames:  # Dont react to yourself
+            return
+
         if message.startswith(".eta"):
             if register_eta(source, message):
                 yield from self.message(source, "Got it, see you")
