@@ -246,6 +246,7 @@ class MyOwnBot(pydle.Client):
 
             elif message.startswith(".eta"):
                 register_eta(source, message)
+                yield from self.message(target, "Noted!")
 
             elif message.startswith(".here") or message.startswith(".da"):
                 register_here(source)
@@ -256,12 +257,14 @@ class MyOwnBot(pydle.Client):
                 current_mac_users = []
                 current_rfid_users = []
                 current_eta_users = {}
+                yield from self.message(target, "Cleared")
                 
             elif message.startswith(".purge"):
                 current_irc_users = []
                 current_mac_users = []
                 current_rfid_users = []
                 current_eta_users = {}
+                yield from self.message(target, "...")
 
             elif message.startswith(".version"):
               yield from self.message(target, get_version())
